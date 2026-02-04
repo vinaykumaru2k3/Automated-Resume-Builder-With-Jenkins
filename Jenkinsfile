@@ -34,16 +34,18 @@ pipeline {
             environment {
                 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
                 npm_config_ignore_scripts = 'true'
+                NODE_ENV = 'development'
             }
             steps {
                 sh '''
                     mkdir -p .npm-cache
                     node --version
                     npm --version
-                    npm ci --prefer-offline --no-audit
+                    npm ci --include=dev --prefer-offline --no-audit
                 '''
             }
         }
+
 
 
         stage('Validate Resume Data') {
