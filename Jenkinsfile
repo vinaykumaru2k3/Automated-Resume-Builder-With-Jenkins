@@ -13,7 +13,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo "═══════════════════════════════════════"
@@ -29,30 +28,28 @@ pipeline {
                 docker {
                     image 'node:18-bullseye-slim'
                     reuseNode true
+                    // Ensure we can create the .npm-cache and node_modules
+                    args '-u root:root'
                 }
             }
             environment {
                 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
-                npm_config_ignore_scripts = 'true'
                 NODE_ENV = 'development'
             }
             steps {
                 sh '''
                     mkdir -p .npm-cache
-                    node --version
-                    npm --version
-                    npm ci --include=dev --prefer-offline --no-audit
+                    npm ci --prefer-offline --no-audit
                 '''
             }
         }
-
-
 
         stage('Validate Resume Data') {
             agent {
                 docker {
                     image 'node:18-bullseye-slim'
                     reuseNode true
+                    args '-u root:root'
                 }
             }
             steps {
@@ -84,7 +81,8 @@ pipeline {
                 echo "═══════════════════════════════════════"
                 echo "Stage: Build PDF Docker Image"
                 echo "═══════════════════════════════════════"
-                sh 'docker build --network=host -t resume-pdf .'
+                // Using the local node_modules we just built
+                sh 'docker build -t resume-pdf .'
             }
         }
 
@@ -96,7 +94,8 @@ pipeline {
                 sh '''
                     mkdir -p output
                     docker run --rm \
-                      -v "$PWD/output:/app/output" \
+                      -u $(id -u):$(id -g) \
+                      -v "$PWD:/app" \
                       resume-pdf
                 '''
             }
@@ -107,53 +106,22 @@ pipeline {
                 echo "═══════════════════════════════════════"
                 echo "Stage: Archive Artifacts"
                 echo "═══════════════════════════════════════"
-
                 sh '''
                     if [ ! -f output/resume.pdf ]; then
                         echo "ERROR: resume.pdf not found"
                         exit 1
                     fi
-                    ls -lh output/resume.pdf
                 '''
-
-                archiveArtifacts artifacts: 'output/resume.pdf',
-                                 onlyIfSuccessful: true
-
-                archiveArtifacts artifacts: 'coverage/**',
-                                 allowEmptyArchive: true
+                archiveArtifacts artifacts: 'output/resume.pdf', onlyIfSuccessful: true
+                archiveArtifacts artifacts: 'coverage/**', allowEmptyArchive: true
             }
         }
     }
 
     post {
         always {
-            echo "═══════════════════════════════════════"
-            echo "Post Build Summary"
-            echo "═══════════════════════════════════════"
-            sh '''
-                echo "Workspace size:"
-                du -sh . || true
-            '''
+            sh 'echo "Workspace summary:"; du -sh . || true'
         }
-
-        success {
-            echo "═══════════════════════════════════════"
-            echo "✓ BUILD SUCCESSFUL"
-            echo "═══════════════════════════════════════"
-            echo "Resume PDF generated and archived."
-        }
-
-        failure {
-            echo "═══════════════════════════════════════"
-            echo "❌ BUILD FAILED"
-            echo "═══════════════════════════════════════"
-            echo "Possible causes:"
-            echo "- Invalid resume.json"
-            echo "- Test failures"
-            echo "- Puppeteer/Chromium error"
-            echo "- Docker daemon not available"
-        }
-
         cleanup {
             echo "Cleaning up dangling Docker images..."
             sh 'docker image prune -f || true'
