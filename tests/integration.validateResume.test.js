@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { validateResume } = require('../../scripts/validateResume');
+const { validateResume } = require('../scripts/validateResume');
 
 describe('validateResume - Integration Tests', () => {
     let originalLogError;

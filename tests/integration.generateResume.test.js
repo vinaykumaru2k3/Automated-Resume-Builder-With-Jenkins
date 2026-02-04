@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { loadResume, loadTemplate, compileTemplate } = require('../../scripts/generateResume');
+const { loadResume, loadTemplate, compileTemplate } = require('../scripts/generateResume');
 
 describe('generateResume - Integration Tests', () => {
     const outputDir = path.join(__dirname, '..', '..', 'output');

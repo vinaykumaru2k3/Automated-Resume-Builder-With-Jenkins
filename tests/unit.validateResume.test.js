@@ -4,7 +4,7 @@
  * Tests individual validation functions with mocked data
  */
 
-const { validateRequiredField, validateArrayNotEmpty } = require('../../scripts/validateResume');
+const { validateRequiredField, validateArrayNotEmpty } = require('../scripts/validateResume');
 
 describe('validateResume - Unit Tests', () => {
     describe('validateRequiredField', () => {
