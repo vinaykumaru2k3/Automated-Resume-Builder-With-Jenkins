@@ -68,6 +68,7 @@ pipeline {
                 docker {
                     image 'node:18-bullseye-slim'
                     reuseNode true
+                    args '-u root:root'
                 }
             }
             steps {
