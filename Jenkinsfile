@@ -28,17 +28,15 @@ pipeline {
                 docker {
                     image 'node:18-bullseye-slim'
                     reuseNode true
-                    // Ensure we can create the .npm-cache and node_modules
-                    args '-u root:root'
+                    // This flag is the "magic bullet" for network hangs in local Docker
+                    args '-u root:root --network host'
                 }
-            }
-            environment {
-                PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
-                NODE_ENV = 'development'
             }
             steps {
                 sh '''
-                    mkdir -p .npm-cache
+                    npm config set fetch-retries 5
+                    npm config set fetch-retry-mintimeout 20000
+                    npm config set fetch-retry-maxtimeout 120000
                     npm ci --prefer-offline --no-audit
                 '''
             }
