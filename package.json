@@ -1,0 +1,34 @@
+{
+  "name": "automated-resume-builder",
+  "version": "1.0.0",
+  "description": "Automated Resume Builder Pipeline using Jenkins - Generates PDF resumes from JSON data",
+  "main": "scripts/generateResume.js",
+  "scripts": {
+    "validate": "node scripts/validateResume.js",
+    "generate": "node scripts/generateResume.js",
+    "test": "jest --coverage",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:unit": "jest --testPathPattern=unit",
+    "dev": "npm run validate && npm run generate"
+  },
+  "keywords": [
+    "jenkins",
+    "resume",
+    "automation",
+    "pdf",
+    "pipeline"
+  ],
+  "author": "DevOps Engineer",
+  "license": "MIT",
+  "dependencies": {
+    "handlebars": "^4.7.7",
+    "puppeteer": "^21.6.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
+}
