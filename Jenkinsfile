@@ -3,221 +3,155 @@ pipeline {
 
     environment {
         NODE_ENV = 'production'
-        BUILD_TIMESTAMP = sh(script: 'date +%Y%m%d_%H%M%S', returnStdout: true).trim()
+        NPM_CONFIG_CACHE = "${WORKSPACE}/.npm-cache"
     }
 
     options {
-        buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '10'))
-        timeout(time: 30, unit: 'MINUTES')
         timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '10'))
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                script {
-                    echo "═══════════════════════════════════════"
-                    echo "Stage: Checkout Code"
-                    echo "═══════════════════════════════════════"
-                }
-                
+                echo "═══════════════════════════════════════"
+                echo "Stage: Checkout Code"
+                echo "═══════════════════════════════════════"
                 checkout scm
-                
-                script {
-                    echo "Repository checked out successfully"
-                    sh 'git log --oneline -1'
-                }
+                sh 'git log --oneline -1'
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    echo ""
-                    echo "═══════════════════════════════════════"
-                    echo "Stage: Install Dependencies"
-                    echo "═══════════════════════════════════════"
+        stage('Install Dependencies (cached)') {
+            agent {
+                docker {
+                    image 'node:18-bullseye-slim'
+                    reuseNode true
                 }
-                
+            }
+            steps {
+                echo "═══════════════════════════════════════"
+                echo "Stage: Install Dependencies"
+                echo "═══════════════════════════════════════"
                 sh '''
-                    echo "Checking Node.js version..."
+                    mkdir -p .npm-cache
                     node --version
                     npm --version
-                    
-                    echo "Installing npm dependencies..."
                     npm ci --prefer-offline --no-audit
-                    
-                    echo "Verifying installations..."
-                    npm list --depth=0
                 '''
             }
         }
 
         stage('Validate Resume Data') {
-            steps {
-                script {
-                    echo ""
-                    echo "═══════════════════════════════════════"
-                    echo "Stage: Validate Resume Data"
-                    echo "═══════════════════════════════════════"
+            agent {
+                docker {
+                    image 'node:18-bullseye-slim'
+                    reuseNode true
                 }
-                
-                sh '''
-                    echo "Running resume validation..."
-                    npm run validate
-                    
-                    echo "Validation completed successfully!"
-                '''
+            }
+            steps {
+                echo "═══════════════════════════════════════"
+                echo "Stage: Validate Resume Data"
+                echo "═══════════════════════════════════════"
+                sh 'npm run validate'
             }
         }
 
         stage('Run Tests') {
-            steps {
-                script {
-                    echo ""
-                    echo "═══════════════════════════════════════"
-                    echo "Stage: Run Tests (Unit + Integration)"
-                    echo "═══════════════════════════════════════"
+            agent {
+                docker {
+                    image 'node:18-bullseye-slim'
+                    reuseNode true
                 }
-                
-                sh '''
-                    echo "Running all tests with coverage..."
-                    npm test -- --coverage --passWithNoTests
-                    
-                    echo "Tests completed successfully!"
-                '''
+            }
+            steps {
+                echo "═══════════════════════════════════════"
+                echo "Stage: Run Tests"
+                echo "═══════════════════════════════════════"
+                sh 'npm test -- --coverage --passWithNoTests'
+            }
+        }
+
+        stage('Build PDF Generator Image') {
+            steps {
+                echo "═══════════════════════════════════════"
+                echo "Stage: Build PDF Docker Image"
+                echo "═══════════════════════════════════════"
+                sh 'docker build -t resume-pdf .'
             }
         }
 
         stage('Generate Resume PDF') {
             steps {
-                script {
-                    echo ""
-                    echo "═══════════════════════════════════════"
-                    echo "Stage: Generate Resume PDF"
-                    echo "═══════════════════════════════════════"
-                }
-                
+                echo "═══════════════════════════════════════"
+                echo "Stage: Generate Resume PDF"
+                echo "═══════════════════════════════════════"
                 sh '''
-                    echo "Generating resume PDF..."
-                    npm run generate
-                    
-                    echo "Resume PDF generated successfully!"
-                    
-                    # Display PDF file info
-                    if [ -f output/resume.pdf ]; then
-                        echo "PDF file created:"
-                        ls -lh output/resume.pdf
-                    else
-                        echo "ERROR: PDF file was not created!"
-                        exit 1
-                    fi
+                    mkdir -p output
+                    docker run --rm \
+                      -v "$PWD/output:/app/output" \
+                      resume-pdf
                 '''
             }
         }
 
-        stage('Archive Artifact') {
+        stage('Archive Artifacts') {
             steps {
-                script {
-                    echo ""
-                    echo "═══════════════════════════════════════"
-                    echo "Stage: Archive Artifact"
-                    echo "═══════════════════════════════════════"
-                }
-                
+                echo "═══════════════════════════════════════"
+                echo "Stage: Archive Artifacts"
+                echo "═══════════════════════════════════════"
+
                 sh '''
-                    echo "Archiving resume PDF as build artifact..."
-                    
-                    if [ -d "output" ]; then
-                        echo "Output directory contents:"
-                        ls -la output/
+                    if [ ! -f output/resume.pdf ]; then
+                        echo "ERROR: resume.pdf not found"
+                        exit 1
                     fi
+                    ls -lh output/resume.pdf
                 '''
-                
-                // Archive the PDF
-                archiveArtifacts artifacts: 'output/resume.pdf', 
-                                 allowEmptyArchive: false, 
+
+                archiveArtifacts artifacts: 'output/resume.pdf',
                                  onlyIfSuccessful: true
-                
-                // Archive test coverage reports
-                archiveArtifacts artifacts: 'coverage/**', 
-                                 allowEmptyArchive: true, 
-                                 onlyIfSuccessful: true
-                
-                script {
-                    echo "Artifacts archived successfully!"
-                }
+
+                archiveArtifacts artifacts: 'coverage/**',
+                                 allowEmptyArchive: true
             }
         }
     }
 
     post {
         always {
-            script {
-                echo ""
-                echo "═══════════════════════════════════════"
-                echo "Post-Build Actions"
-                echo "═══════════════════════════════════════"
-                
-                // Publish test results
-                junit testResults: '**/test-results.xml', 
-                      allowEmptyResults: true, 
-                      skipPublishingChecks: true
-                
-                // Clean up large artifacts to save space
-                sh '''
-                    echo "Workspace summary:"
-                    du -sh . 2>/dev/null | head -1 || echo "Size info unavailable"
-                    
-                    echo "Build completed at: $(date)"
-                '''
-            }
+            echo "═══════════════════════════════════════"
+            echo "Post Build Summary"
+            echo "═══════════════════════════════════════"
+            sh '''
+                echo "Workspace size:"
+                du -sh . || true
+            '''
         }
 
         success {
-            script {
-                echo ""
-                echo "═══════════════════════════════════════"
-                echo "✓ BUILD SUCCESSFUL"
-                echo "═══════════════════════════════════════"
-                echo "Resume PDF has been generated and archived as a build artifact."
-                echo "You can download it from the Jenkins build page."
-            }
+            echo "═══════════════════════════════════════"
+            echo "✓ BUILD SUCCESSFUL"
+            echo "═══════════════════════════════════════"
+            echo "Resume PDF generated and archived."
         }
 
         failure {
-            script {
-                echo ""
-                echo "═══════════════════════════════════════"
-                echo "❌ BUILD FAILED"
-                echo "═══════════════════════════════════════"
-                echo "Please review the logs above for details."
-                echo "Common issues:"
-                echo "  - Invalid resume.json syntax"
-                echo "  - Missing required resume fields"
-                echo "  - Puppeteer PDF generation failure"
-                echo "  - Test validation failures"
-            }
-        }
-
-        unstable {
-            script {
-                echo ""
-                echo "═══════════════════════════════════════"
-                echo "⚠ BUILD UNSTABLE"
-                echo "═══════════════════════════════════════"
-                echo "Some tests or checks may have warnings."
-            }
+            echo "═══════════════════════════════════════"
+            echo "❌ BUILD FAILED"
+            echo "═══════════════════════════════════════"
+            echo "Possible causes:"
+            echo "- Invalid resume.json"
+            echo "- Test failures"
+            echo "- Puppeteer/Chromium error"
+            echo "- Docker daemon not available"
         }
 
         cleanup {
-            script {
-                echo "Cleaning up workspace..."
-                // The 'cleanWs()' step would delete the entire workspace
-                // Uncomment if needed for disk space management:
-                // cleanWs()
-                sh 'echo "Pipeline execution complete"'
-            }
+            echo "Cleaning up dangling Docker images..."
+            sh 'docker image prune -f || true'
         }
     }
 }
