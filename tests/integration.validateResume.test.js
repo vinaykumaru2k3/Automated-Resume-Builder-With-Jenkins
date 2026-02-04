@@ -1,7 +1,6 @@
 /**
  * Integration Tests for validateResume.js
- * 
- * Tests validation against the actual resume.json file
+ * * Tests validation against the actual resume.json file
  */
 
 const fs = require('fs');
@@ -11,6 +10,9 @@ const { validateResume } = require('../scripts/validateResume');
 describe('validateResume - Integration Tests', () => {
     let originalLogError;
     let errorMessages = [];
+    
+    // Define the path once using the current working directory (project root)
+    const resumePath = path.join(process.cwd(), 'data', 'resume.json');
 
     beforeEach(() => {
         errorMessages = [];
@@ -28,7 +30,6 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should load resume.json file successfully', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         expect(fs.existsSync(resumePath)).toBe(true);
         
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
@@ -44,7 +45,6 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should have valid JSON structure in resume.json', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
@@ -53,7 +53,6 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should contain all required top-level fields', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
@@ -66,7 +65,6 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should have at least one experience entry', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
@@ -75,7 +73,6 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should have at least one education entry', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
@@ -84,7 +81,6 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should have at least one skill category', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
@@ -101,7 +97,6 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should have valid email format in resume data', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
@@ -110,7 +105,6 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should have non-empty name field', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
@@ -119,7 +113,6 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should have contact information', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
@@ -132,11 +125,10 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should have valid experience entries with required fields', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
-        resume.experience.forEach((job, index) => {
+        resume.experience.forEach((job) => {
             expect(job).toHaveProperty('company', expect.any(String));
             expect(job.company.length).toBeGreaterThan(0);
             
@@ -148,11 +140,10 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should have valid education entries with required fields', () => {
-        const resumePath = path.join(__dirname, '..', '..', 'data', 'resume.json');
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
-        resume.education.forEach((edu, index) => {
+        resume.education.forEach((edu) => {
             expect(edu).toHaveProperty('degree', expect.any(String));
             expect(edu.degree.length).toBeGreaterThan(0);
             

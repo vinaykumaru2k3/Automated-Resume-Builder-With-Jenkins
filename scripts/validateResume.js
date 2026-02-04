@@ -100,7 +100,8 @@ function validateResume() {
     console.log(`${colors.cyan}   Resume Validation${colors.reset}`);
     console.log(`${colors.cyan}═══════════════════════════════════════${colors.reset}\n`);
 
-    const resumePath = path.join(__dirname, '..', 'data', 'resume.json');
+    // UPDATED: Using process.cwd() to consistently find the data folder from project root
+    const resumePath = path.join(process.cwd(), 'data', 'resume.json');
     logInfo(`Loading resume from: ${resumePath}`);
 
     let resume;

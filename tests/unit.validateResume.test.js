@@ -1,7 +1,6 @@
 /**
  * Unit Tests for validateResume.js
- * 
- * Tests individual validation functions with mocked data
+ * * Tests individual validation functions with mocked data
  */
 
 const { validateRequiredField, validateArrayNotEmpty } = require('../scripts/validateResume');
