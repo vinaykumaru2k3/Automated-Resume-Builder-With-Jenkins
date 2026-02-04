@@ -1,0 +1,141 @@
+{
+  "name": "John Developer",
+  "email": "john.developer@example.com",
+  "contact": {
+    "phone": "+1 (555) 123-4567",
+    "location": "San Francisco, CA",
+    "github": "https://github.com/johndeveloper",
+    "linkedin": "https://linkedin.com/in/johndeveloper"
+  },
+  "professional_summary": "Senior DevOps Engineer with 6+ years of experience designing and implementing scalable CI/CD pipelines, infrastructure automation, and cloud-native solutions. Passionate about infrastructure-as-code, containerization, and building reliable systems.",
+  "experience": [
+    {
+      "company": "Tech Solutions Inc",
+      "role": "Senior DevOps Engineer",
+      "duration": "2022 - Present",
+      "location": "San Francisco, CA",
+      "description": "Lead DevOps initiatives for microservices infrastructure",
+      "achievements": [
+        "Designed and deployed Kubernetes clusters serving 10M+ requests/day",
+        "Reduced deployment time from 2 hours to 15 minutes with Jenkins pipeline automation",
+        "Implemented infrastructure-as-code using Terraform, managing 50+ AWS resources",
+        "Led migration from monolithic to containerized architecture"
+      ]
+    },
+    {
+      "company": "CloudPlatform Corp",
+      "role": "DevOps Engineer",
+      "duration": "2020 - 2022",
+      "location": "Seattle, WA",
+      "description": "Built and maintained CI/CD pipelines and infrastructure",
+      "achievements": [
+        "Established GitOps workflow using ArgoCD for continuous deployment",
+        "Implemented comprehensive monitoring and alerting with Prometheus and Grafana",
+        "Reduced infrastructure costs by 35% through resource optimization",
+        "Mentored 3 junior engineers in DevOps best practices"
+      ]
+    },
+    {
+      "company": "StartupXYZ",
+      "role": "Junior DevOps Engineer",
+      "duration": "2018 - 2020",
+      "location": "Portland, OR",
+      "description": "Supported infrastructure and deployment operations",
+      "achievements": [
+        "Automated server provisioning using Ansible playbooks",
+        "Set up Docker-based development environment for 15+ developers",
+        "Implemented backup and disaster recovery procedures",
+        "Contributed to open-source DevOps tools and libraries"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "school": "State University",
+      "degree": "Bachelor of Science in Computer Science",
+      "field_of_study": "Computer Science",
+      "graduation_year": 2018,
+      "description": "Relevant coursework: Systems Design, Networking, Cloud Computing"
+    },
+    {
+      "school": "Linux Academy",
+      "degree": "Certification",
+      "field_of_study": "Kubernetes for Developers",
+      "graduation_year": 2021,
+      "description": "Completed hands-on Kubernetes certification program"
+    }
+  ],
+  "skills": [
+    {
+      "category": "Cloud Platforms",
+      "items": [
+        "AWS (EC2, S3, RDS, CloudFormation, ECS)",
+        "Google Cloud Platform (GCP)",
+        "Azure basics"
+      ]
+    },
+    {
+      "category": "Container & Orchestration",
+      "items": [
+        "Docker",
+        "Kubernetes",
+        "Docker Compose",
+        "Helm"
+      ]
+    },
+    {
+      "category": "CI/CD Tools",
+      "items": [
+        "Jenkins",
+        "GitLab CI/CD",
+        "GitHub Actions",
+        "ArgoCD"
+      ]
+    },
+    {
+      "category": "Infrastructure as Code",
+      "items": [
+        "Terraform",
+        "Ansible",
+        "CloudFormation",
+        "Pulumi"
+      ]
+    },
+    {
+      "category": "Monitoring & Logging",
+      "items": [
+        "Prometheus",
+        "Grafana",
+        "ELK Stack",
+        "DataDog"
+      ]
+    },
+    {
+      "category": "Programming & Scripting",
+      "items": [
+        "Python",
+        "Bash/Shell",
+        "Go",
+        "Node.js"
+      ]
+    },
+    {
+      "category": "Version Control",
+      "items": [
+        "Git",
+        "GitHub",
+        "GitLab",
+        "Bitbucket"
+      ]
+    },
+    {
+      "category": "Soft Skills",
+      "items": [
+        "System Design",
+        "Problem Solving",
+        "Team Leadership",
+        "Technical Documentation"
+      ]
+    }
+  ]
+}
