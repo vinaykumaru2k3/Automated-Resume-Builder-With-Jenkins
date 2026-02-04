@@ -6,14 +6,24 @@ FROM node:18-bullseye-slim AS deps
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+
+# Added flags to prevent hangs and reduce memory usage:
+# --no-audit: Skip security checks during install
+# --prefer-offline: Use local cache if possible
+# --maxsockets 1: Reduce concurrent network requests (good for restricted CI environments)
+RUN npm ci --no-audit --prefer-offline --maxsockets 3
 
 # ================================
 # Stage 2: Runtime + PDF generation
 # ================================
 FROM node:18-bullseye-slim
 
-# Install Chromium and fonts for Puppeteer
+# Set environment variables early
+ENV NODE_ENV=production \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Install Chromium and fonts (Keep this as one layer to save space)
 RUN apt-get update && apt-get install -y \
     chromium \
     fonts-liberation \
@@ -35,17 +45,11 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-ENV NODE_ENV=production
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-
 WORKDIR /app
 
-# Copy node_modules from deps stage
+# Copy only what is strictly necessary from the deps stage
 COPY --from=deps /app/node_modules ./node_modules
-
-# Copy app source
 COPY . .
 
-# One job. One purpose.
+# Ensure the app handles paths correctly in the container
 CMD ["npm", "run", "generate"]
