@@ -31,10 +31,11 @@ pipeline {
                     reuseNode true
                 }
             }
+            environment {
+                PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
+                npm_config_ignore_scripts = 'true'
+            }
             steps {
-                echo "═══════════════════════════════════════"
-                echo "Stage: Install Dependencies"
-                echo "═══════════════════════════════════════"
                 sh '''
                     mkdir -p .npm-cache
                     node --version
@@ -43,6 +44,7 @@ pipeline {
                 '''
             }
         }
+
 
         stage('Validate Resume Data') {
             agent {
