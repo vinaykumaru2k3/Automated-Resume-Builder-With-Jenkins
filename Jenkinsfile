@@ -84,7 +84,7 @@ pipeline {
                 echo "═══════════════════════════════════════"
                 echo "Stage: Build PDF Docker Image"
                 echo "═══════════════════════════════════════"
-                sh 'docker build -t resume-pdf .'
+                sh 'docker build --network=host -t resume-pdf .'
             }
         }
 
