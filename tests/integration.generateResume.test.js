@@ -150,7 +150,7 @@ describe('generateResume - Integration Tests', () => {
         });
 
         it('should have .gitignore excluding output directory', () => {
-            const gitignorePath = path.join(__dirname, '..', '..', '.gitignore');
+            const gitignorePath = path.join(process.cwd(), '.gitignore');
             const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
             expect(gitignoreContent).toContain('output/');
         });
