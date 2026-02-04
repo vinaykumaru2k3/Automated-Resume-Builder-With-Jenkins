@@ -2,10 +2,8 @@
 
 /**
  * Resume Validation Script
- * 
+ *
  * Validates the resume.json file against required fields and data structure.
- * Fails fast with detailed error messages if validation fails.
- * 
  * Usage: npm run validate
  */
 
@@ -22,22 +20,23 @@ const colors = {
 };
 
 /**
- * Logs an error message with red color and exits with code 1
+ * Throws a validation error (NO process.exit here)
  */
 function logError(message) {
-    console.error(`${colors.red}❌ ERROR: ${message}${colors.reset}`);
-    process.exit(1);
+    const error = new Error(message);
+    error.isValidationError = true;
+    throw error;
 }
 
 /**
- * Logs a success message with green color
+ * Logs a success message
  */
 function logSuccess(message) {
     console.log(`${colors.green}✓ ${message}${colors.reset}`);
 }
 
 /**
- * Logs an info message with cyan color
+ * Logs an info message
  */
 function logInfo(message) {
     console.log(`${colors.cyan}ℹ ${message}${colors.reset}`);
@@ -85,7 +84,9 @@ function validateArrayNotEmpty(obj, fieldPath, description, minItems = 1) {
     }
 
     if (value.length < minItems) {
-        logError(`Array must have at least ${minItems} item(s): ${description} (path: ${fieldPath}), found ${value.length}`);
+        logError(
+            `Array must have at least ${minItems} item(s): ${description} (path: ${fieldPath}), found ${value.length}`
+        );
     }
 
     return value;
@@ -99,110 +100,66 @@ function validateResume() {
     console.log(`${colors.cyan}   Resume Validation${colors.reset}`);
     console.log(`${colors.cyan}═══════════════════════════════════════${colors.reset}\n`);
 
-    // Load resume.json
     const resumePath = path.join(__dirname, '..', 'data', 'resume.json');
     logInfo(`Loading resume from: ${resumePath}`);
 
     let resume;
     try {
-        const fileContent = fs.readFileSync(resumePath, 'utf-8');
-        resume = JSON.parse(fileContent);
-        logSuccess(`Resume JSON loaded successfully`);
+        resume = JSON.parse(fs.readFileSync(resumePath, 'utf-8'));
+        logSuccess('Resume JSON loaded successfully');
     } catch (error) {
         if (error.code === 'ENOENT') {
             logError(`Resume file not found at ${resumePath}`);
-        } else if (error instanceof SyntaxError) {
-            logError(`Invalid JSON syntax in resume.json: ${error.message}`);
-        } else {
-            logError(`Failed to read resume file: ${error.message}`);
         }
+        logError(`Invalid resume.json: ${error.message}`);
     }
 
     console.log();
 
-    // Validate personal info
-    logInfo(`Validating personal information...`);
+    logInfo('Validating personal information...');
     validateRequiredField(resume, 'name', 'Full Name (name)');
     validateRequiredField(resume, 'email', 'Email Address (email)');
     validateRequiredField(resume, 'contact', 'Contact Information (contact)');
-    logSuccess(`Personal information validated`);
+    logSuccess('Personal information validated');
 
     console.log();
 
-    // Validate experience
-    logInfo(`Validating professional experience...`);
-    validateArrayNotEmpty(resume, 'experience', 'Experience Array (experience)', 1);
-    
-    resume.experience.forEach((job, index) => {
-        const jobNum = index + 1;
-        if (!job.company || job.company.trim() === '') {
-            logError(`Experience entry ${jobNum}: Missing or empty 'company' field`);
-        }
-        if (!job.role && !job.jobTitle) {
-            logError(`Experience entry ${jobNum}: Missing 'role' or 'jobTitle' field`);
-        }
-        if (!job.duration && !job.startDate) {
-            logError(`Experience entry ${jobNum}: Missing 'duration' or 'startDate' field`);
-        }
-    });
+    logInfo('Validating professional experience...');
+    validateArrayNotEmpty(resume, 'experience', 'Experience Array (experience)');
     logSuccess(`Professional experience validated (${resume.experience.length} entries)`);
 
     console.log();
 
-    // Validate education
-    logInfo(`Validating education...`);
-    validateArrayNotEmpty(resume, 'education', 'Education Array (education)', 1);
-    
-    resume.education.forEach((edu, index) => {
-        const eduNum = index + 1;
-        if (!edu.school && !edu.institution) {
-            logError(`Education entry ${eduNum}: Missing 'school' or 'institution' field`);
-        }
-        if (!edu.degree) {
-            logError(`Education entry ${eduNum}: Missing 'degree' field`);
-        }
-        if (!edu.graduation_year && !edu.graduationYear) {
-            logError(`Education entry ${eduNum}: Missing 'graduation_year' or 'graduationYear' field`);
-        }
-    });
+    logInfo('Validating education...');
+    validateArrayNotEmpty(resume, 'education', 'Education Array (education)');
     logSuccess(`Education validated (${resume.education.length} entries)`);
 
     console.log();
 
-    // Validate skills
-    logInfo(`Validating skills...`);
-    validateArrayNotEmpty(resume, 'skills', 'Skills Array (skills)', 1);
-    
-    resume.skills.forEach((skillGroup, index) => {
-        const groupNum = index + 1;
-        if (!skillGroup.category || skillGroup.category.trim() === '') {
-            logError(`Skills group ${groupNum}: Missing or empty 'category' field`);
-        }
-        if (!Array.isArray(skillGroup.items) || skillGroup.items.length === 0) {
-            logError(`Skills group ${groupNum}: Missing 'items' array or array is empty`);
-        }
-    });
+    logInfo('Validating skills...');
+    validateArrayNotEmpty(resume, 'skills', 'Skills Array (skills)');
     logSuccess(`Skills validated (${resume.skills.length} skill categories)`);
 
     console.log();
-
-    // Summary
-    console.log(`${colors.cyan}═══════════════════════════════════════${colors.reset}`);
-    console.log(`${colors.green}✓ All validation checks passed!${colors.reset}`);
-    console.log(`${colors.cyan}═══════════════════════════════════════${colors.reset}\n`);
-
+    logSuccess('All validation checks passed!');
     return resume;
 }
 
-// Run validation if this script is executed directly
+/**
+ * CLI entry point ONLY
+ */
 if (require.main === module) {
     try {
         validateResume();
         process.exit(0);
     } catch (error) {
-        logError(`Unexpected error during validation: ${error.message}`);
+        console.error(`${colors.red}❌ ERROR: ${error.message}${colors.reset}`);
+        process.exit(1);
     }
 }
 
-// Export for testing
-module.exports = { validateResume, validateRequiredField, validateArrayNotEmpty };
+module.exports = {
+    validateResume,
+    validateRequiredField,
+    validateArrayNotEmpty
+};
