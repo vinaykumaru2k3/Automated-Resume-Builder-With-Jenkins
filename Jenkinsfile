@@ -2,50 +2,43 @@ pipeline {
     agent any
 
     environment {
-        NODE_ENV = 'production'
+        // Set to development so Jenkins installs devDependencies (Jest, Babel)
+        NODE_ENV = 'development'
         NPM_CONFIG_CACHE = "${WORKSPACE}/.npm-cache"
     }
 
     options {
         timestamps()
-        timeout(time: 30, unit: 'MINUTES')
+        timeout(time: 20, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '10'))
     }
 
     stages {
         stage('Clean Workspace') {
-        steps {
-            cleanWs() // This requires the "Workspace Cleanup Plugin"
+            steps {
+                echo "Cleaning up previous build artifacts..."
+                cleanWs()
+            }
         }
-    }
+
         stage('Checkout') {
             steps {
-                echo "═══════════════════════════════════════"
-                echo "Stage: Checkout Code"
-                echo "═══════════════════════════════════════"
                 checkout scm
                 sh 'git log --oneline -1'
             }
         }
 
-        stage('Install Dependencies (cached)') {
+        stage('Install Dependencies') {
             agent {
                 docker {
                     image 'node:18-bullseye-slim'
                     reuseNode true
-                    // Added --dns to ensure the container can reach the npm registry
-                    args '-u root:root --network host --dns 8.8.8.8'
+                    args '-u root:root'
                 }
             }
-            environment {
-                // This is the crucial line for your package-lock setup
-                PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
-            }
             steps {
-                sh '''
-                    npm config set fetch-retries 5
-                    npm ci --prefer-offline --no-audit --loglevel info
-                '''
+                echo "Installing dependencies (including devDependencies for testing)..."
+                sh 'npm install --loglevel info'
             }
         }
 
@@ -56,9 +49,6 @@ pipeline {
                     reuseNode true
                     args '-u root:root'
                 }
-            }
-            environment {
-                PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
             }
             steps {
                 sh 'npm run validate'
@@ -75,27 +65,22 @@ pipeline {
             }
             steps {
                 echo "═══════════════════════════════════════"
-                echo "Stage: Run Tests"
+                echo "Stage: Running Jest Tests"
                 echo "═══════════════════════════════════════"
-                sh 'npm test -- --coverage --passWithNoTests'
+                sh 'npm test'
             }
         }
 
         stage('Build PDF Generator Image') {
             steps {
-                echo "═══════════════════════════════════════"
-                echo "Stage: Build PDF Docker Image"
-                echo "═══════════════════════════════════════"
-                // Using the local node_modules we just built
+                echo "Building the production Docker image..."
                 sh 'docker build -t resume-pdf .'
             }
         }
 
         stage('Generate Resume PDF') {
             steps {
-                echo "═══════════════════════════════════════"
-                echo "Stage: Generate Resume PDF"
-                echo "═══════════════════════════════════════"
+                echo "Running container to generate PDF..."
                 sh '''
                     mkdir -p output
                     docker run --rm \
@@ -108,27 +93,24 @@ pipeline {
 
         stage('Archive Artifacts') {
             steps {
-                echo "═══════════════════════════════════════"
-                echo "Stage: Archive Artifacts"
-                echo "═══════════════════════════════════════"
-                sh '''
-                    if [ ! -f output/resume.pdf ]; then
-                        echo "ERROR: resume.pdf not found"
-                        exit 1
-                    fi
-                '''
-                archiveArtifacts artifacts: 'output/resume.pdf', onlyIfSuccessful: true
+                echo "Archiving generated PDF and test coverage..."
+                // Check if file exists before archiving
+                sh 'test -f output/resume.pdf'
+                archiveArtifacts artifacts: 'output/resume.pdf', fingerprint: true
                 archiveArtifacts artifacts: 'coverage/**', allowEmptyArchive: true
             }
         }
     }
 
     post {
-        always {
-            sh 'echo "Workspace summary:"; du -sh . || true'
+        success {
+            echo "Build Successful! You can download your resume from the artifacts section."
+        }
+        failure {
+            echo "Build Failed. Please check the console logs for Jest or Validation errors."
         }
         cleanup {
-            echo "Cleaning up dangling Docker images..."
+            echo "Cleaning up Docker images..."
             sh 'docker image prune -f || true'
         }
     }

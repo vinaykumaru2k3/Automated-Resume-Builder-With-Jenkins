@@ -1,14 +1,12 @@
 FROM node:18-bullseye-slim
 WORKDIR /app
 
-# Copy package files first for better caching
+# In the Docker image, we ONLY want production dependencies
 COPY package*.json ./
-RUN npm ci --production
+RUN npm ci --only=production
 
-# Copy the rest of your code (including the new generateResume.js)
 COPY . .
-
-# Create the output directory inside the container
 RUN mkdir -p output
 
+# This uses the 'generate' script from package.json
 CMD ["npm", "run", "generate"]
