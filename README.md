@@ -1,4 +1,4 @@
-# 🚀 Automated Resume Builder With Jenkins
+# Automated Resume Builder With Jenkins
 
 <div align="center">
 
@@ -7,19 +7,18 @@
 [![GitHub stars](https://img.shields.io/github/stars/vinaykumaru2k3/Automated-Resume-Builder-With-Jenkins?style=for-the-badge)](https://github.com/vinaykumaru2k3/Automated-Resume-Builder-With-Jenkins/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/vinaykumaru2k3/Automated-Resume-Builder-With-Jenkins?style=for-the-badge)](https://github.com/vinaykumaru2k3/Automated-Resume-Builder-With-Jenkins/network)
 [![GitHub issues](https://img.shields.io/github/issues/vinaykumaru2k3/Automated-Resume-Builder-With-Jenkins?style=for-the-badge)](https://github.com/vinaykumaru2k3/Automated-Resume-Builder-With-Jenkins/issues)
-[![GitHub license](https://img.shields.io/github/license/vinaykumaru2k3/Automated-Resume-Builder-With-Jenkins?style=for-the-badge)](LICENSE)
 
 **A robust CI/CD pipeline for an automated resume builder web application, leveraging Jenkins for continuous integration and Docker for containerization.**
 
 </div>
 
-## 📖 Overview
+## Overview
 
 This repository presents a comprehensive solution for an "Automated Resume Builder" web application, primarily focusing on establishing a fully automated Continuous Integration and Continuous Delivery (CI/CD) pipeline using **Jenkins** and **Docker**. The project demonstrates best practices in DevOps, enabling developers to automatically build, test, containerize, and prepare for deployment of the resume builder application upon code changes.
 
 The core of the project involves a modern JavaScript web application (the resume builder itself) and a robust Jenkins pipeline (`Jenkinsfile`) that orchestrates the entire CI/CD workflow, from dependency installation and testing to Docker image creation. This setup ensures high code quality, rapid iteration, and reliable deployment processes for the resume building tool.
 
-## ✨ Features
+## Features
 
 -   **Automated CI/CD Pipeline**: Full automation of build, test, and containerization using Jenkins.
 -   **Docker Containerization**: Packaging the resume builder application into a lightweight, portable Docker image for consistent environments.
@@ -29,28 +28,37 @@ The core of the project involves a modern JavaScript web application (the resume
 -   **Dependency Management**: Efficient handling of Node.js dependencies using npm.
 -   **Structured Project Layout**: Clear separation of application code, build configurations, and CI/CD scripts.
 
-## 🖥️ Screenshots
+  ## Tech Stack
+
+## Frontend / Application
+
+<p align="center">
+  <img src="https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" />
+  <img src="https://img.shields.io/badge/Node.js-18.x-339933?style=for-the-badge&logo=node.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/npm-8.x-CB3837?style=for-the-badge&logo=npm&logoColor=white" />
+  <img src="https://img.shields.io/badge/Babel-ES6%2B-FCC624?style=for-the-badge&logo=babel&logoColor=black" />
+  <img src="https://img.shields.io/badge/Webpack-5.x-1C78C0?style=for-the-badge&logo=webpack&logoColor=white" />
+  <img src="https://img.shields.io/badge/Jest-29.x-C21325?style=for-the-badge&logo=jest&logoColor=white" />
+</p>
+
+## DevOps & Infrastructure
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Jenkins-2.x-D24939?style=for-the-badge&logo=jenkins&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker-20.x-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Git-2.x-F05032?style=for-the-badge&logo=git&logoColor=white" />
+</p>
+
+## Screenshots
 
 <!-- TODO: Add screenshots of the resume builder application and/or Jenkins pipeline views -->
-![Screenshot of the Resume Builder Application](path-to-application-screenshot.png)
-![Screenshot of the Jenkins Pipeline Build](path-to-jenkins-pipeline-screenshot.png)
+### Jenkins Build Pipeline View
+<img src="https://github.com/user-attachments/assets/dc176e27-081d-4b51-9240-b351a717d92d" width="900" />
 
-## 🛠️ Tech Stack
+### Build artifacts (coverage + output)
+<img src="https://github.com/user-attachments/assets/0b125477-0dcf-4c9c-a6cf-513947dcd9c6" height="300" />
 
-**Frontend/Application:**
--   **JavaScript**: ![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
--   **Node.js**: ![Node.js](https://img.shields.io/badge/Node.js-18.x-339933?style=for-the-badge&logo=node.js&logoColor=white) (Inferred)
--   **npm**: ![npm](https://img.shields.io/badge/npm-8.x-CB3837?style=for-the-badge&logo=npm&logoColor=white) (Package Manager)
--   **Babel**: ![Babel](https://img.shields.io/badge/Babel-ES6%2B-FCC624?style=for-the-badge&logo=babel&logoColor=black) (Transpiler for modern JavaScript)
--   **Webpack**: ![Webpack](https://img.shields.io/badge/Webpack-5.x-1C78C0?style=for-the-badge&logo=webpack&logoColor=white) (Module Bundler - inferred)
--   **Jest**: ![Jest](https://img.shields.io/badge/Jest-29.x-C21325?style=for-the-badge&logo=jest&logoColor=white) (Testing Framework)
-
-**DevOps & Infrastructure:**
--   **Jenkins**: ![Jenkins](https://img.shields.io/badge/Jenkins-2.x-D24939?style=for-the-badge&logo=jenkins&logoColor=white) (CI/CD Automation Server)
--   **Docker**: ![Docker](https://img.shields.io/badge/Docker-20.x-2496ED?style=for-the-badge&logo=docker&logoColor=white) (Containerization Platform)
--   **Git**: ![Git](https://img.shields.io/badge/Git-2.x-F05032?style=for-the-badge&logo=git&logoColor=white) (Version Control System)
-
-## 🚀 Quick Start
+## Quick Start
 
 This project has two main setup paths: setting up the **Resume Builder Application** for local development and configuring the **Jenkins CI/CD Pipeline**.
 
@@ -140,7 +148,7 @@ Automated-Resume-Builder-With-Jenkins/
 └── tests/               # Directory containing unit and integration test files
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 Environment variables are primarily used within the Jenkins pipeline for sensitive information (e.g., Docker registry credentials) or dynamic configurations. For local application development, any `.env.example` or similar would typically be present, but none were detected.
@@ -157,7 +165,7 @@ Environment variables are primarily used within the Jenkins pipeline for sensiti
 -   **`Jenkinsfile`**: The heart of the CI/CD pipeline, defining stages for building, testing, and deploying the application.
 -   **`Dockerfile`**: Specifies the steps to create a Docker image of the application.
 
-## 🔧 Development
+## Development
 
 ### Available Scripts
 The `package.json` file includes the following scripts:
@@ -175,7 +183,7 @@ The `package.json` file includes the following scripts:
 4.  Run `npm test` to verify functionality.
 5.  Commit changes to the `main` branch (or a feature branch) to trigger the Jenkins pipeline.
 
-## 🧪 Testing
+## Testing
 
 This project uses **Jest** for testing its JavaScript components and logic.
 
@@ -189,7 +197,7 @@ npm test -- --coverage
 
 Test files are expected to be located in the `tests/` directory, following typical Jest conventions.
 
-## 🚀 Deployment
+## Deployment
 
 The `Jenkinsfile` defines the automated deployment process:
 
@@ -202,7 +210,7 @@ The `Jenkinsfile` defines the automated deployment process:
 
 This pipeline ensures that only tested and containerized versions of the application are pushed and made ready for deployment.
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions to enhance this project! Please follow these steps:
 
@@ -213,20 +221,16 @@ We welcome contributions to enhance this project! Please follow these steps:
 5.  Push to the branch (`git push origin feature/your-feature-name`).
 6.  Open a Pull Request.
 
-## 📄 License
-
-This project is currently unlicensed. Please refer to the repository owner for licensing information.
-
-## 🙏 Acknowledgments
+## Acknowledgments
 
 -   **Jenkins**: For providing a powerful CI/CD automation server.
 -   **Docker**: For enabling seamless application containerization.
 -   **Node.js & npm**: For the robust JavaScript runtime and package management.
 -   **Babel & Jest**: For modern JavaScript development and testing capabilities.
 
-## 📞 Support & Contact
+## Support & Contact
 
--   🐛 Issues: [GitHub Issues](https://github.com/vinaykumaru2k3/Automated-Resume-Builder-With-Jenkins/issues)
+-   Issues: [GitHub Issues](https://github.com/vinaykumaru2k3/Automated-Resume-Builder-With-Jenkins/issues)
 -   Feel free to reach out to the repository owner, [vinaykumaru2k3](https://github.com/vinaykumaru2k3), for any questions or support.
 
 ---
