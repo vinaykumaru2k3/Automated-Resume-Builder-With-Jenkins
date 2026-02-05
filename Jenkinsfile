@@ -28,16 +28,18 @@ pipeline {
                 docker {
                     image 'node:18-bullseye-slim'
                     reuseNode true
-                    // This flag is the "magic bullet" for network hangs in local Docker
-                    args '-u root:root --network host'
+                    // Added --dns to ensure the container can reach the npm registry
+                    args '-u root:root --network host --dns 8.8.8.8'
                 }
+            }
+            environment {
+                // This is the crucial line for your package-lock setup
+                PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
             }
             steps {
                 sh '''
                     npm config set fetch-retries 5
-                    npm config set fetch-retry-mintimeout 20000
-                    npm config set fetch-retry-maxtimeout 120000
-                    npm ci --prefer-offline --no-audit
+                    npm ci --prefer-offline --no-audit --loglevel info
                 '''
             }
         }
@@ -50,10 +52,10 @@ pipeline {
                     args '-u root:root'
                 }
             }
+            environment {
+                PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
+            }
             steps {
-                echo "═══════════════════════════════════════"
-                echo "Stage: Validate Resume Data"
-                echo "═══════════════════════════════════════"
                 sh 'npm run validate'
             }
         }
