@@ -84,14 +84,11 @@ pipeline {
                         echo "Stage: Generate Resume PDF"
                         echo "═══════════════════════════════════════"
                         sh '''
-                            # 1. Create the directory
-                            mkdir -p output
-                            
-                            # 2. Fix permissions so the Docker user can write to it
-                            chmod -R 777 output
-                            chmod -R 777 node_modules/.cache || true
-                            
-                            # 3. Run the container
+                            # Use Docker to fix the permissions of the current directory
+                            # This bypasses the 'Operation not permitted' error on the host
+                            docker run --rm -v "$PWD":/app -w /app alpine sh -c "mkdir -p output && chmod -R 777 output"
+
+                            # Now run your generator
                             docker run --rm \
                             -u $(id -u):$(id -g) \
                             -v "$PWD:/app" \
