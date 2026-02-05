@@ -13,6 +13,11 @@ pipeline {
     }
 
     stages {
+        stage('Clean Workspace') {
+        steps {
+            cleanWs() // This requires the "Workspace Cleanup Plugin"
+        }
+    }
         stage('Checkout') {
             steps {
                 echo "═══════════════════════════════════════"
