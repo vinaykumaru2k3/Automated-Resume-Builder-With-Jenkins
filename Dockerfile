@@ -1,14 +1,11 @@
-# Use the same base image
 FROM node:18-bullseye-slim
 
-# 1. Set environment variables early
-# These tell Puppeteer to use the system-installed Chromium instead of downloading its own
+# 1. Set environment variables
 ENV NODE_ENV=production \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# 2. Install Chromium and essential fonts
-# We combine update, install, and cleanup into one layer to keep the image slim
+# 2. Install Chromium and fonts
 RUN apt-get update && apt-get install -y \
     chromium \
     fonts-liberation \
@@ -18,9 +15,10 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# 3. Copy everything from the Jenkins workspace
-# This includes the 'node_modules' folder already created by the previous Jenkins stage
+# 3. Copy the already-installed node_modules first (for speed/caching)
+COPY node_modules ./node_modules
+# 4. Copy the rest of the application
 COPY . .
 
-# 4. Run the generation script
+# 5. Run the generation script
 CMD ["npm", "run", "generate"]
