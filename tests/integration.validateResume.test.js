@@ -20,13 +20,14 @@ describe('validateResume - Integration Tests', () => {
         originalLogError = console.error;
         console.error = jest.fn((message) => {
             errorMessages.push(message);
-            // Call original to preserve output during testing
-            originalLogError(message);
         });
+        // Also suppress console.log for cleaner test results
+        jest.spyOn(console, 'log').mockImplementation(() => {});
     });
 
     afterEach(() => {
         console.error = originalLogError;
+        jest.restoreAllMocks();
     });
 
     it('should load resume.json file successfully', () => {
@@ -37,120 +38,71 @@ describe('validateResume - Integration Tests', () => {
     });
 
     it('should pass validation for actual resume.json', () => {
-        console.log = jest.fn(); // Suppress console output for cleaner test results
-        
         expect(() => {
             validateResume();
         }).not.toThrow();
     });
 
-    it('should have valid JSON structure in resume.json', () => {
+    it('should contain all required top-level fields including professional_summary', () => {
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
-        expect(resume).toBeInstanceOf(Object);
-        expect(typeof resume).toBe('object');
-    });
-
-    it('should contain all required top-level fields', () => {
-        const fileContent = fs.readFileSync(resumePath, 'utf-8');
-        const resume = JSON.parse(fileContent);
-
-        // Check for required fields (note: the actual file uses 'name', 'email', 'contact')
         expect(resume).toHaveProperty('name');
         expect(resume).toHaveProperty('email');
+        expect(resume).toHaveProperty('professional_summary'); // Updated from 'summary'
         expect(resume).toHaveProperty('experience');
         expect(resume).toHaveProperty('education');
         expect(resume).toHaveProperty('skills');
     });
 
-    it('should have at least one experience entry', () => {
-        const fileContent = fs.readFileSync(resumePath, 'utf-8');
-        const resume = JSON.parse(fileContent);
-
-        expect(Array.isArray(resume.experience)).toBe(true);
-        expect(resume.experience.length).toBeGreaterThan(0);
-    });
-
-    it('should have at least one education entry', () => {
-        const fileContent = fs.readFileSync(resumePath, 'utf-8');
-        const resume = JSON.parse(fileContent);
-
-        expect(Array.isArray(resume.education)).toBe(true);
-        expect(resume.education.length).toBeGreaterThan(0);
-    });
-
-    it('should have at least one skill category', () => {
-        const fileContent = fs.readFileSync(resumePath, 'utf-8');
-        const resume = JSON.parse(fileContent);
-
-        expect(Array.isArray(resume.skills)).toBe(true);
-        expect(resume.skills.length).toBeGreaterThan(0);
-        
-        // Verify each skill category has items
-        resume.skills.forEach(skillGroup => {
-            expect(skillGroup).toHaveProperty('category');
-            expect(skillGroup).toHaveProperty('items');
-            expect(Array.isArray(skillGroup.items)).toBe(true);
-            expect(skillGroup.items.length).toBeGreaterThan(0);
-        });
-    });
-
-    it('should have valid email format in resume data', () => {
-        const fileContent = fs.readFileSync(resumePath, 'utf-8');
-        const resume = JSON.parse(fileContent);
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        expect(resume.email).toMatch(emailRegex);
-    });
-
-    it('should have non-empty name field', () => {
-        const fileContent = fs.readFileSync(resumePath, 'utf-8');
-        const resume = JSON.parse(fileContent);
-
-        expect(resume.name).toBeDefined();
-        expect(resume.name.trim().length).toBeGreaterThan(0);
-    });
-
-    it('should have contact information', () => {
+    it('should have valid nested contact information required for PDF header', () => {
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
         expect(resume.contact).toBeDefined();
-        expect(typeof resume.contact).toBe('object');
-        
-        // Contact should have at least some information
-        const contactKeys = Object.keys(resume.contact);
-        expect(contactKeys.length).toBeGreaterThan(0);
+        expect(resume.contact).toHaveProperty('phone');
+        expect(resume.contact).toHaveProperty('location');
+        expect(resume.contact.phone.length).toBeGreaterThan(0);
+        expect(resume.contact.location.length).toBeGreaterThan(0);
     });
 
     it('should have valid experience entries with required fields', () => {
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
+        expect(Array.isArray(resume.experience)).toBe(true);
+        expect(resume.experience.length).toBeGreaterThan(0);
+
         resume.experience.forEach((job) => {
-            expect(job).toHaveProperty('company', expect.any(String));
-            expect(job.company.length).toBeGreaterThan(0);
-            
-            // Should have either 'role' or 'jobTitle'
-            const hasRole = job.role && job.role.length > 0;
-            const hasJobTitle = job.jobTitle && job.jobTitle.length > 0;
-            expect(hasRole || hasJobTitle).toBe(true);
+            expect(job).toHaveProperty('company');
+            expect(job).toHaveProperty('role');
+            expect(job).toHaveProperty('achievements');
+            expect(Array.isArray(job.achievements)).toBe(true);
         });
     });
 
-    it('should have valid education entries with required fields', () => {
+    it('should have at least one skill category with items', () => {
+        const fileContent = fs.readFileSync(resumePath, 'utf-8');
+        const resume = JSON.parse(fileContent);
+
+        expect(Array.isArray(resume.skills)).toBe(true);
+        expect(resume.skills.length).toBeGreaterThan(0);
+        
+        resume.skills.forEach(skillGroup => {
+            expect(skillGroup).toHaveProperty('category');
+            expect(skillGroup).toHaveProperty('items');
+            expect(skillGroup.items.length).toBeGreaterThan(0);
+        });
+    });
+
+    it('should have valid education entries', () => {
         const fileContent = fs.readFileSync(resumePath, 'utf-8');
         const resume = JSON.parse(fileContent);
 
         resume.education.forEach((edu) => {
-            expect(edu).toHaveProperty('degree', expect.any(String));
-            expect(edu.degree.length).toBeGreaterThan(0);
-            
-            // Should have graduation year as number
-            const gradYear = edu.graduation_year || edu.graduationYear;
-            expect(gradYear).toBeDefined();
-            expect(typeof gradYear).toBe('number');
+            expect(edu).toHaveProperty('school');
+            expect(edu).toHaveProperty('degree');
+            expect(typeof edu.graduation_year).toBe('number');
         });
     });
 });

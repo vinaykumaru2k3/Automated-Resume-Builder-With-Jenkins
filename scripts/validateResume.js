@@ -4,6 +4,7 @@
  * Resume Validation Script
  *
  * Validates the resume.json file against required fields and data structure.
+ * Updated for React-PDF transition and professional_summary field.
  * Usage: npm run validate
  */
 
@@ -57,7 +58,7 @@ function validateRequiredField(obj, fieldPath, description) {
         }
     }
 
-    if (!value || (typeof value === 'string' && value.trim() === '')) {
+    if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
         logError(`Required field is empty: ${description} (path: ${fieldPath})`);
     }
 
@@ -97,10 +98,9 @@ function validateArrayNotEmpty(obj, fieldPath, description, minItems = 1) {
  */
 function validateResume() {
     console.log(`${colors.cyan}═══════════════════════════════════════${colors.reset}`);
-    console.log(`${colors.cyan}   Resume Validation${colors.reset}`);
+    console.log(`${colors.cyan}   Resume Validation (React-PDF)${colors.reset}`);
     console.log(`${colors.cyan}═══════════════════════════════════════${colors.reset}\n`);
 
-    // UPDATED: Using process.cwd() to consistently find the data folder from project root
     const resumePath = path.join(process.cwd(), 'data', 'resume.json');
     logInfo(`Loading resume from: ${resumePath}`);
 
@@ -118,31 +118,38 @@ function validateResume() {
     console.log();
 
     logInfo('Validating personal information...');
-    validateRequiredField(resume, 'name', 'Full Name (name)');
-    validateRequiredField(resume, 'email', 'Email Address (email)');
-    validateRequiredField(resume, 'contact', 'Contact Information (contact)');
+    validateRequiredField(resume, 'name', 'Full Name');
+    validateRequiredField(resume, 'email', 'Email Address');
+    validateRequiredField(resume, 'professional_summary', 'Professional Summary');
+    
+    // Validating Nested Contact Info
+    validateRequiredField(resume, 'contact.phone', 'Phone Number');
+    validateRequiredField(resume, 'contact.location', 'Location');
     logSuccess('Personal information validated');
 
     console.log();
 
     logInfo('Validating professional experience...');
-    validateArrayNotEmpty(resume, 'experience', 'Experience Array (experience)');
+    validateArrayNotEmpty(resume, 'experience', 'Experience Array');
+    // Check first experience entry for basic structure
+    validateRequiredField(resume.experience[0], 'role', 'First Experience Role');
+    validateRequiredField(resume.experience[0], 'company', 'First Experience Company');
     logSuccess(`Professional experience validated (${resume.experience.length} entries)`);
 
     console.log();
 
     logInfo('Validating education...');
-    validateArrayNotEmpty(resume, 'education', 'Education Array (education)');
+    validateArrayNotEmpty(resume, 'education', 'Education Array');
     logSuccess(`Education validated (${resume.education.length} entries)`);
 
     console.log();
 
     logInfo('Validating skills...');
-    validateArrayNotEmpty(resume, 'skills', 'Skills Array (skills)');
+    validateArrayNotEmpty(resume, 'skills', 'Skills Array');
     logSuccess(`Skills validated (${resume.skills.length} skill categories)`);
 
     console.log();
-    logSuccess('All validation checks passed!');
+    logSuccess('All validation checks passed for PDF generation!');
     return resume;
 }
 

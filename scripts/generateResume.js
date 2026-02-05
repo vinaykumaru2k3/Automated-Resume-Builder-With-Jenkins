@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 /**
- * Resume PDF Generation Script
- * * Reads resume.json and resume.html template, compiles with Handlebars,
- * and generates a PDF using Puppeteer.
+ * Resume PDF Generation Script (React-PDF Version)
+ * - Reads resume.json
+ * - Renders a PDF using @react-pdf/renderer
  */
 
 const fs = require('fs');
 const path = require('path');
-const Handlebars = require('handlebars');
-const puppeteer = require('puppeteer');
+const React = require('react');
+const { renderToFile, Page, Text, View, Document, StyleSheet } = require('@react-pdf/renderer');
 
 // Colors for terminal output
 const colors = {
@@ -20,12 +20,100 @@ const colors = {
     cyan: '\x1b[36m'
 };
 
+// Define Styles (Replaces your old CSS in resume.html)
+const styles = StyleSheet.create({
+    page: { padding: 30, fontFamily: 'Helvetica', fontSize: 10, color: '#333' },
+    header: { marginBottom: 20, borderBottom: '2pt solid #2c3e50', paddingBottom: 10 },
+    name: { fontSize: 28, fontWeight: 'bold', color: '#2c3e50' },
+    contactRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 5, color: '#7f8c8d', fontSize: 9 },
+    
+    sectionTitle: { fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase', color: '#2c3e50', marginTop: 15, marginBottom: 5, borderBottom: '0.5pt solid #eee' },
+    
+    // Experience Styles
+    expContainer: { marginBottom: 12 },
+    expHeader: { flexDirection: 'row', justifyContent: 'space-between', fontWeight: 'bold' },
+    role: { fontWeight: 'bold', fontSize: 11 },
+    duration: { color: '#7f8c8d' },
+    company: { fontStyle: 'italic', marginBottom: 3 },
+    bullet: { marginLeft: 10, marginTop: 2 },
+    
+    // Skills Grid
+    skillsGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 5 },
+    skillCategory: { width: '50%', marginBottom: 8 },
+    categoryLabel: { fontWeight: 'bold', fontSize: 9, color: '#34495e' }
+});
+
+const ResumeDocument = ({ data }) => (
+    <Document>
+        <Page size="A4" style={styles.page}>
+            {/* Header Section */}
+            <View style={styles.header}>
+                <Text style={styles.name}>{data.name}</Text>
+                <View style={styles.contactRow}>
+                    <Text>{data.email} | {data.contact?.phone}</Text>
+                    <Text>{data.contact?.location}</Text>
+                </View>
+                <View style={[styles.contactRow, { marginTop: 2 }]}>
+                    <Text>GitHub: {data.contact?.github}</Text>
+                    <Text>LinkedIn: {data.contact?.linkedin}</Text>
+                </View>
+            </View>
+
+            {/* Summary */}
+            <View>
+                <Text style={styles.sectionTitle}>Professional Summary</Text>
+                <Text style={{ lineHeight: 1.4 }}>{data.professional_summary}</Text>
+            </View>
+
+            {/* Experience Section */}
+            <View>
+                <Text style={styles.sectionTitle}>Experience</Text>
+                {data.experience?.map((exp, i) => (
+                    <View key={i} style={styles.expContainer}>
+                        <View style={styles.expHeader}>
+                            <Text style={styles.role}>{exp.role}</Text>
+                            <Text style={styles.duration}>{exp.duration}</Text>
+                        </View>
+                        <Text style={styles.company}>{exp.company} — {exp.location}</Text>
+                        {exp.achievements?.map((ach, j) => (
+                            <Text key={j} style={styles.bullet}>• {ach}</Text>
+                        ))}
+                    </View>
+                ))}
+            </View>
+
+            {/* Skills Section */}
+            <View>
+                <Text style={styles.sectionTitle}>Technical Skills</Text>
+                <View style={styles.skillsGrid}>
+                    {data.skills?.map((cat, i) => (
+                        <View key={i} style={styles.skillCategory}>
+                            <Text style={styles.categoryLabel}>{cat.category}:</Text>
+                            <Text>{cat.items.join(', ')}</Text>
+                        </View>
+                    ))}
+                </View>
+            </View>
+
+            {/* Education Section */}
+            <View>
+                <Text style={styles.sectionTitle}>Education</Text>
+                {data.education?.map((edu, i) => (
+                    <View key={i} style={{ marginBottom: 5 }}>
+                        <View style={styles.expHeader}>
+                            <Text style={{ fontWeight: 'bold' }}>{edu.school}</Text>
+                            <Text style={styles.duration}>{edu.graduation_year}</Text>
+                        </View>
+                        <Text>{edu.degree} in {edu.field_of_study}</Text>
+                    </View>
+                ))}
+            </View>
+        </Page>
+    </Document>
+);
+
 function logError(message, error = null) {
     console.error(`${colors.red}❌ ERROR: ${message}${colors.reset}`);
-    if (error && process.env.DEBUG) {
-        console.error(`${colors.red}${error.stack}${colors.reset}`);
-    }
-    // We don't exit here so Jest can finish running its assertions
     if (require.main === module) process.exit(1);
 }
 
@@ -41,7 +129,6 @@ function logInfo(message) {
  * Reads and parses resume JSON
  */
 function loadResume() {
-    // UPDATED: Using process.cwd() for Jenkins compatibility
     const resumePath = path.join(process.cwd(), 'data', 'resume.json');
     logInfo(`Loading resume from: ${resumePath}`);
 
@@ -57,108 +144,29 @@ function loadResume() {
 }
 
 /**
- * Reads and prepares HTML template
+ * Generates PDF using React-PDF
  */
-function loadTemplate() {
-    // UPDATED: Using process.cwd()
-    const templatePath = path.join(process.cwd(), 'template', 'resume.html');
-    logInfo(`Loading template from: ${templatePath}`);
-
+async function generateResume() {
     try {
-        const fileContent = fs.readFileSync(templatePath, 'utf-8');
-        logSuccess(`Template loaded successfully`);
-        return fileContent;
-    } catch (error) {
-        logError(`Failed to read template: ${error.message}`, error);
-        throw error;
-    }
-}
-
-/**
- * Compiles Handlebars template with resume data
- */
-function compileTemplate(templateContent, resume) {
-    logInfo(`Compiling template with resume data...`);
-
-    try {
-        const now = new Date();
-        const formattedDate = now.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+        const resumeData = loadResume();
         
-        // BRIDGE: Mapping flat JSON structure to the nested template structure
-        // This ensures {{personalInfo.fullName}} works even if JSON has just "name"
-        const resumeWithTimestamp = {
-            ...resume,
-            personalInfo: {
-                fullName: resume.name,
-                email: resume.email,
-                phone: resume.contact?.phone || '',
-                location: resume.contact?.location || '',
-                summary: resume.summary || ''
-            },
-            generatedAt: formattedDate
-        };
-
-        const template = Handlebars.compile(templateContent);
-        const html = template(resumeWithTimestamp);
-        
-        logSuccess(`Template compiled successfully`);
-        return html;
-    } catch (error) {
-        logError(`Failed to compile template: ${error.message}`, error);
-        throw error;
-    }
-}
-
-/**
- * Generates PDF from HTML using Puppeteer
- */
-async function generatePDF(htmlContent) {
-    logInfo(`Starting PDF generation...`);
-    let browser;
-    try {
-        browser = await puppeteer.launch({
-            headless: 'new',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
-
-        const page = await browser.newPage();
-        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-
-        // UPDATED: Using process.cwd()
         const outputDir = path.join(process.cwd(), 'output');
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, { recursive: true });
         }
 
         const pdfPath = path.join(outputDir, 'resume.pdf');
-        await page.pdf({
-            path: pdfPath,
-            format: 'A4',
-            printBackground: true
-        });
+        logInfo(`Starting PDF generation with React-PDF...`);
+
+        // Renders the React component directly to the filesystem
+        await renderToFile(
+            React.createElement(ResumeDocument, { data: resumeData }),
+            pdfPath
+        );
 
         logSuccess(`PDF generated successfully at: ${pdfPath}`);
-        return pdfPath;
     } catch (error) {
         logError(`Failed to generate PDF: ${error.message}`, error);
-        throw error;
-    } finally {
-        if (browser) await browser.close();
-    }
-}
-
-async function generateResume() {
-    try {
-        const resume = loadResume();
-        const templateContent = loadTemplate();
-        const htmlContent = compileTemplate(templateContent, resume);
-        await generatePDF(htmlContent);
-    } catch (error) {
-        // Error already logged in sub-functions
         if (require.main === module) process.exit(1);
     }
 }
@@ -167,4 +175,4 @@ if (require.main === module) {
     generateResume();
 }
 
-module.exports = { generateResume, loadResume, loadTemplate, compileTemplate, generatePDF };
+module.exports = { generateResume, loadResume, ResumeDocument };
