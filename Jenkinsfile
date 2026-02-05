@@ -79,17 +79,26 @@ pipeline {
         }
 
         stage('Generate Resume PDF') {
-            steps {
-                echo "Running container to generate PDF..."
-                sh '''
-                    mkdir -p output
-                    docker run --rm \
-                      -u $(id -u):$(id -g) \
-                      -v "$PWD:/app" \
-                      resume-pdf
-                '''
-            }
-        }
+                    steps {
+                        echo "═══════════════════════════════════════"
+                        echo "Stage: Generate Resume PDF"
+                        echo "═══════════════════════════════════════"
+                        sh '''
+                            # 1. Create the directory
+                            mkdir -p output
+                            
+                            # 2. Fix permissions so the Docker user can write to it
+                            chmod -R 777 output
+                            chmod -R 777 node_modules/.cache || true
+                            
+                            # 3. Run the container
+                            docker run --rm \
+                            -u $(id -u):$(id -g) \
+                            -v "$PWD:/app" \
+                            resume-pdf
+                        '''
+                    }
+                }
 
         stage('Archive Artifacts') {
             steps {
